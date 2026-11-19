@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Administração — TOMBAMENTO CIEEI DONA NENA{% endblock %}
+{% block page_title %}Administração e Auditoria{% endblock %}
+
+{% block content %}
+
+<!-- Transferências Pendentes -->
+<div class="card" style="border-left: 4px solid var(--laranja);">
+    <h3>Solicitações de Transferência Pendentes ({{ transferencias|length }})</h3>
+    {% if transferencias %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Ambiente</th>
+                    <th>De</th>
+                    <th>Para</th>
+                    <th>Motivo</th>
+                    <th class="col-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transferencias %}
+                <tr>
+                    <td><strong>{{ t.nome_ambiente }}</strong></td>
+                    <td>{{ t.nome_solicitante }}</td>
+                    <td>{{ t.nome_destinatario }}</td>
+                    <td><div class="cell-hint">{{ t.motivo }}</div></td>
+                    <td class="col-actions">
+                        <form method="POST"
+                              action="{{ url_for('administracao.aprovar', sol_id=t.id) }}"
+                              class="inline-form"
+                              onsubmit="return confirm('Aprovar transferência?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-small btn-success">Aprovar</button>
+                        </form>
+                        <button type="button" class="btn-small btn-warn"
+                                onclick="abrirRejeitar('{{ t.id }}')">
+                            Rejeitar
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="cell-hint">Nenhuma solicitação pendente.</p>
+    {% endif %}
+</div>
+
+<!-- Histórico -->
+<div class="card">
+    <h3>Histórico de Ações (últimas 50)</h3>
+    {% if historico %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Tabela</th>
+                    <th>Justificativa</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in historico %}
+                <tr>
+                    <td><div class="cell-hint">{{ h.criado_em[:16] | replace('T', ' ') }}</div></td>
+                    <td><strong>{{ h.nome_usuario or '—' }}</strong></td>
+                    <td><span class="badge badge-gray">{{ h.acao }}</span></td>
+                    <td><div class="cell-hint">{{ h.tabela_afetada }}</div></td>
+                    <td><div class="cell-hint">{{ h.justificativa or '—' }}</div></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">Nenhum registro no histórico.</p>
+    {% endif %}
+</div>
+
+<!-- Modal Rejeitar -->
+<div class="modal-backdrop" id="modalRejeitar">
+    <div class="modal">
+        <h3>Rejeitar Transferência</h3>
+        <form method="POST" id="formRejeitar">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="justificativa">Justificativa (mín. 5 caracteres)</label>
+            <textarea id="justificativa" name="justificativa" rows="3" required></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn-small btn-ghost" onclick="fecharRejeitar()">Cancelar</button>
+                <button type="submit" class="btn-small btn-warn">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirRejeitar(id) {
+    document.getElementById('formRejeitar').action = '/administracao/transferencia/' + id + '/rejeitar';
+    document.getElementById('modalRejeitar').classList.add('show');
+}
+function fecharRejeitar() {
+    document.getElementById('modalRejeitar').classList.remove('show');
+    document.getElementById('justificativa').value = '';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Funcionários — TOMBAMENTO CIEEI DONA NENA{% endblock %}
+{% block page_title %}Gestão de Funcionários{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+    <div></div>
+    <a href="{{ url_for('funcionarios.novo') }}" class="btn-primary btn-inline">
+        + Novo Funcionário
+    </a>
+</div>
+
+<div class="card">
+    {% if funcionarios %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Perfil</th>
+                    <th>Situação</th>
+                    <th class="col-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in funcionarios %}
+                <tr {% if not f.ativo %}class="row-inactive"{% endif %}>
+                    <td><strong>{{ f.nome_completo }}</strong></td>
+                    <td>
+                        {% if f.role == 'admin' %}
+                            <span class="badge badge-gray" style="background: var(--azul-bg); color: var(--azul);">Administrador</span>
+                        {% else %}
+                            <span class="badge badge-gray">Funcionário</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if f.ativo %}
+                            <span class="badge badge-green">Ativo</span>
+                        {% else %}
+                            <span class="badge badge-orange">Inativo</span>
+                        {% endif %}
+                    </td>
+                    <td class="col-actions">
+                        <a href="{{ url_for('funcionarios.editar', usuario_id=f.id) }}"
+                           class="btn-small btn-ghost">Editar</a>
+                        
+                        <!-- Botão Redefinir Senha (Abre Modal) -->
+                        <button type="button" class="btn-small btn-ghost"
+                                onclick="abrirSenha('{{ f.id }}', '{{ f.nome_completo }}')">
+                            Senha
+                        </button>
+
+                        <!-- Botão Ativar/Desativar -->
+                        {% if f.id != session.get('user_id') %}
+                        <form method="POST"
+                              action="{{ url_for('funcionarios.alternar', usuario_id=f.id) }}"
+                              class="inline-form"
+                              onsubmit="return confirm('{{ 'Desativar' if f.ativo else 'Reativar' }} este acesso?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            {% if f.ativo %}
+                                <button type="submit" class="btn-small btn-warn">Desativar</button>
+                            {% else %}
+                                <button type="submit" class="btn-small btn-success">Reativar</button>
+                            {% endif %}
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">Nenhum funcionário cadastrado.</p>
+    {% endif %}
+</div>
+
+<!-- Modal para Redefinir Senha -->
+<div class="modal-backdrop" id="modalSenha">
+    <div class="modal">
+        <h3>Redefinir Senha</h3>
+        <p id="modalSenhaNome" class="cell-hint" style="margin-bottom:12px;"></p>
+        <form method="POST" id="formSenha">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="nova_senha">Nova Senha (mínimo 6 caracteres)</label>
+            <input type="password" id="nova_senha" name="nova_senha" required minlength="6">
+            <div class="modal-actions">
+                <button type="button" class="btn-small btn-ghost" onclick="fecharSenha()">Cancelar</button>
+                <button type="submit" class="btn-small btn-warn">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirSenha(id, nome) {
+    document.getElementById('formSenha').action = '/funcionarios/' + id + '/senha';
+    document.getElementById('modalSenhaNome').textContent = 'Funcionário: ' + nome;
+    document.getElementById('modalSenha').classList.add('show');
+}
+function fecharSenha() {
+    document.getElementById('modalSenha').classList.remove('show');
+    document.getElementById('nova_senha').value = '';
+}
+</script>
+{% endblock %}

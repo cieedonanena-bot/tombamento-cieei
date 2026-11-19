@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — TOMBAMENTO CIEEI DONA NENA{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="card welcome-card">
+    <h2>Bem-vindo(a), {{ session.get('nome') }}!</h2>
+    <p>Este é o resumo geral do levantamento patrimonial do CIEEI Dona Nena.</p>
+</div>
+
+<!-- Cartões de Métricas Principais -->
+<div class="stats-grid">
+    <div class="stat-card" style="border-left: 4px solid var(--azul-marinho);">
+        <div class="stat-label">Total de Materiais</div>
+        <div class="stat-value">{{ stats.total_materiais }}</div>
+        <div class="stat-hint">Itens catalogados</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid var(--verde);">
+        <div class="stat-label">Com Selo</div>
+        <div class="stat-value" style="color: var(--verde);">{{ stats.total_com_selo }}</div>
+        <div class="stat-hint">Itens com patrimônio</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid var(--laranja);">
+        <div class="stat-label">Sem Selo</div>
+        <div class="stat-value" style="color: var(--laranja);">{{ stats.total_sem_selo }}</div>
+        <div class="stat-hint">Necessitam de selo</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid var(--vermelho);">
+        <div class="stat-label">Itens Danificados</div>
+        <div class="stat-value" style="color: var(--vermelho);">{{ stats.total_danificados }}</div>
+        <div class="stat-hint">Em {{ stats.grupos_com_dano }} grupos</div>
+    </div>
+</div>
+
+<!-- Barra de Progresso dos Ambientes -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3>Progresso da Conferência</h3>
+        <strong style="font-size: 18px; color: var(--azul-marinho);">{{ stats.percentual_conclusao }}% Concluído</strong>
+    </div>
+    
+    <!-- Barra Visual -->
+    <div style="width: 100%; height: 12px; background: var(--cinza-borda); border-radius: 6px; overflow: hidden; margin-bottom: 20px;">
+        <div style="height: 100%; width: {{ stats.percentual_conclusao }}%; background: var(--verde); transition: width 0.5s ease;"></div>
+    </div>
+
+    <div class="stats-grid" style="margin-bottom: 0;">
+        <div class="stat-card" style="padding: 12px;">
+            <div class="stat-label">Concluídos</div>
+            <div class="stat-value" style="font-size: 20px; color: var(--verde);">{{ stats.ambientes_concluidos }}</div>
+        </div>
+        <div class="stat-card" style="padding: 12px;">
+            <div class="stat-label">Em Andamento</div>
+            <div class="stat-value" style="font-size: 20px; color: var(--laranja);">{{ stats.ambientes_em_andamento }}</div>
+        </div>
+        <div class="stat-card" style="padding: 12px;">
+            <div class="stat-label">Pendentes</div>
+            <div class="stat-value" style="font-size: 20px; color: var(--cinza-texto);">{{ stats.ambientes_pendentes }}</div>
+        </div>
+        <div class="stat-card" style="padding: 12px;">
+            <div class="stat-label">Funcionários Participantes</div>
+            <div class="stat-value" style="font-size: 20px; color: var(--azul);">{{ stats.funcionarios_participantes }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Status do Sistema -->
+<div class="card">
+    <h3>Status do sistema</h3>
+    <ul class="system-list">
+        <li><span class="dot dot-green"></span> Sessão segura ativa</li>
+        <li><span class="dot dot-green"></span> Conexão com Supabase OK</li>
+        <li><span class="dot dot-blue"></span> Etapa 10 — Dashboard dinâmico integrado</li>
+        <li><span class="dot dot-gray"></span> Próxima etapa: Auditoria e Relatórios</li>
+    </ul>
+</div>
+{% endblock %}

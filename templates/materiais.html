@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Materiais — TOMBAMENTO CIEEI DONA NENA{% endblock %}
+{% block page_title %}Catálogo de Materiais{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+    <div class="filter-tabs">
+        <a href="{{ url_for('materiais.index', filtro='ativos') }}"
+           class="filter-tab {% if filtro == 'ativos' %}active{% endif %}">
+            Ativos ({{ stats.ativos }})
+        </a>
+        <a href="{{ url_for('materiais.index', filtro='inativos') }}"
+           class="filter-tab {% if filtro == 'inativos' %}active{% endif %}">
+            Inativos ({{ stats.inativos }})
+        </a>
+        <a href="{{ url_for('materiais.index', filtro='todos') }}"
+           class="filter-tab {% if filtro == 'todos' %}active{% endif %}">
+            Todos
+        </a>
+    </div>
+    {% if session.get('role') == 'admin' %}
+    <a href="{{ url_for('materiais.novo') }}" class="btn-primary btn-inline">
+        + Novo Material
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    {% if materiais %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Situação</th>
+                    {% if session.get('role') == 'admin' %}
+                    <th class="col-actions">Ações</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in materiais %}
+                <tr {% if not m.ativo %}class="row-inactive"{% endif %}>
+                    <td><strong>{{ m.nome }}</strong></td>
+                    <td>
+                        {% if m.ativo %}
+                            <span class="badge badge-green">Ativo</span>
+                        {% else %}
+                            <span class="badge badge-gray">Inativo</span>
+                        {% endif %}
+                    </td>
+                    {% if session.get('role') == 'admin' %}
+                    <td class="col-actions">
+                        <a href="{{ url_for('materiais.editar', material_id=m.id) }}"
+                           class="btn-small btn-ghost">Editar</a>
+                        <form method="POST"
+                              action="{{ url_for('materiais.alternar', material_id=m.id) }}"
+                              class="inline-form"
+                              onsubmit="return confirm('{{ 'Desativar' if m.ativo else 'Reativar' }} este material?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            {% if m.ativo %}
+                                <button type="submit" class="btn-small btn-warn">Desativar</button>
+                            {% else %}
+                                <button type="submit" class="btn-small btn-success">Reativar</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">Nenhum material encontrado para este filtro.</p>
+    {% endif %}
+</div>
+{% endblock %}

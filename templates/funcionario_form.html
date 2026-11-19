@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Novo' if modo == 'novo' else 'Editar' }} Funcionário{% endblock %}
+{% block page_title %}{{ 'Novo Funcionário' if modo == 'novo' else 'Editar Funcionário' }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px;">
+    <form method="POST" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label for="nome_completo">Nome Completo *</label>
+        <input type="text" id="nome_completo" name="nome_completo" required
+               value="{{ funcionario.get('nome_completo', '') }}"
+               placeholder="Ex.: Maria Silva">
+
+        {% if modo == 'novo' %}
+        <label for="email">E-mail *</label>
+        <input type="email" id="email" name="email" required
+               value="{{ funcionario.get('email', '') }}"
+               placeholder="seu@email.com">
+
+        <label for="senha">Senha Inicial *</label>
+        <input type="password" id="senha" name="senha" required minlength="6"
+               placeholder="Mínimo 6 caracteres">
+        {% endif %}
+
+        <label for="role">Perfil de Acesso *</label>
+        <select id="role" name="role" required>
+            <option value="funcionario" {% if funcionario.get('role') == 'funcionario' %}selected{% endif %}>Funcionário (apenas conta)</option>
+            <option value="admin" {% if funcionario.get('role') == 'admin' %}selected{% endif %}>Administrador (acesso total)</option>
+        </select>
+
+        <div class="form-actions">
+            <a href="{{ url_for('funcionarios.index') }}" class="btn-small btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-primary btn-inline">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

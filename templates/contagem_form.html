@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Adicionar Material — {{ ambiente.nome }}{% endblock %}
+{% block page_title %}Adicionar Material{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 720px; margin: 0 auto;">
+    <form method="POST" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label for="material_id">Material *</label>
+        <select id="material_id" name="material_id" required>
+            <option value="">— Selecione um material —</option>
+            {% for m in materiais %}
+            <option value="{{ m.id }}">{{ m.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+                <label for="marca">Marca (Opcional)</label>
+                <input type="text" id="marca" name="marca" placeholder="Ex.: Samsung" value="Não identificado">
+            </div>
+            <div>
+                <label for="modelo">Modelo (Opcional)</label>
+                <input type="text" id="modelo" name="modelo" placeholder="Ex.: Galaxy A12" value="Não identificado">
+            </div>
+        </div>
+
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--cinza-borda);">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <div>
+                <label for="quantidade_total">Quantidade Total *</label>
+                <input type="number" id="quantidade_total" name="quantidade_total" required min="1" value="1">
+            </div>
+            <div>
+                <label for="quantidade_com_selo">Com Selo *</label>
+                <input type="number" id="quantidade_com_selo" name="quantidade_com_selo" required min="0" value="0">
+            </div>
+            <div>
+                <label for="quantidade_sem_selo">Sem Selo *</label>
+                <input type="number" id="quantidade_sem_selo" name="quantidade_sem_selo" required min="0" value="0">
+            </div>
+        </div>
+        
+        <div id="aviso-matematica" style="margin-top: 10px; font-size: 14px; font-weight: bold; color: var(--vermelho);">
+            ⚠️ A soma de Com Selo + Sem Selo deve ser igual ao Total.
+        </div>
+
+        <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--cinza-borda);">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3>Danos</h3>
+            <button type="button" class="btn-small btn-ghost" onclick="adicionarDano()">+ Adicionar Dano</button>
+        </div>
+        
+        <div id="lista-danos"></div>
+
+        <div class="form-actions" style="margin-top: 32px;">
+            <a href="{{ url_for('contagem.index', ambiente_id=ambiente.id) }}" class="btn-small btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-primary btn-inline" id="btn-salvar" disabled>Salvar Contagem</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const totalInput = document.getElementById('quantidade_total');
+    const comSeloInput = document.getElementById('quantidade_com_selo');
+    const semSeloInput = document.getElementById('quantidade_sem_selo');
+    const aviso = document.getElementById('aviso-matematica');
+    const btnSalvar = document.getElementById('btn-salvar');
+
+    function verificarMatematica() {
+        const total = parseInt(totalInput.value) || 0;
+        const comSelo = parseInt(comSeloInput.value) || 0;
+        const semSelo = parseInt(semSeloInput.value) || 0;
+
+        if (comSelo + semSelo === total) {
+            aviso.textContent = '✅ Valores corretos.';
+            aviso.style.color = 'var(--verde)';
+            btnSalvar.disabled = false;
+        } else {
+            aviso.textContent = `⚠️ A soma (${comSelo} + ${semSelo} = ${comSelo + semSelo}) não bate com o Total (${total}).`;
+            aviso.style.color = 'var(--vermelho)';
+            btnSalvar.disabled = true;
+        }
+    }
+
+    totalInput.addEventListener('input', verificarMatematica);
+    comSeloInput.addEventListener('input', verificarMatematica);
+    semSeloInput.addEventListener('input', verificarMatematica);
+    verificarMatematica();
+
+    function adicionarDano() {
+        const container = document.getElementById('lista-danos');
+        const div = document.createElement('div');
+        div.style.cssText = "display: grid; grid-template-columns: 80px 1fr 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: start;";
+        div.innerHTML = `
+            <div>
+                <label style="margin-top:0;">Qtd *</label>
+                <input type="number" name="dano_qtd[]" min="1" placeholder="0">
+            </div>
+            <div>
+                <label style="margin-top:0;">Descrição *</label>
+                <input type="text" name="dano_desc[]" placeholder="Ex.: Tela quebrada">
+            </div>
+            <div>
+                <label style="margin-top:0;">Obs</label>
+                <input type="text" name="dano_obs[]" placeholder="Opcional">
+            </div>
+            <div style="margin-top: 24px;">
+                <button type="button" class="btn-small btn-warn" onclick="this.parentElement.parentElement.remove()">X</button>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+</script>
+{% endblock %}

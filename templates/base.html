@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#173C70">
+    <title>{% block title %}TOMBAMENTO CIEEI DONA NENA{% endblock %}</title>
+    
+    <!-- Favicon vazio para evitar erro de FetchError no console -->
+    <link rel="icon" href="data:,">
+    
+    <!-- Caminho ABSOLUTO para garantir o carregamento -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+{% if session.get('user_id') %}
+<div class="app-layout">
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-title">CIEEI</div>
+            <div class="brand-subtitle">Dona Nena</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard.index') }}"
+               class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+                <span class="nav-ico">▦</span> Dashboard
+            </a>
+
+            <a href="{{ url_for('ambientes.index') }}"
+               class="nav-link {% if request.endpoint and request.endpoint.startswith('ambientes.') %}active{% endif %}">
+                <span class="nav-ico">🏛</span> Ambientes
+            </a>
+
+            <a href="{{ url_for('materiais.index') }}"
+               class="nav-link {% if request.endpoint and request.endpoint.startswith('materiais.') %}active{% endif %}">
+                <span class="nav-ico">📦</span> Materiais
+            </a>
+
+            <a href="{{ url_for('ambientes.index') }}" 
+               class="nav-link {% if request.endpoint and request.endpoint.startswith('contagem.') %}active{% endif %}">
+                <span class="nav-ico">✎</span> Contagem
+            </a>
+
+            <a href="{{ url_for('relatorios.index') }}"
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('relatorios.') %}active{% endif %}">
+                <span class="nav-ico">📄</span> Relatórios
+            </a>
+            
+            {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('funcionarios.index') }}"
+               class="nav-link {% if request.endpoint and request.endpoint.startswith('funcionarios.') %}active{% endif %}">
+                <span class="nav-ico">👥</span> Funcionários
+            </a>
+            
+            <!-- LINK ADMINISTRAÇÃO ATIVADO -->
+            <a href="{{ url_for('administracao.index') }}"
+               class="nav-link {% if request.endpoint and request.endpoint.startswith('administracao.') %}active{% endif %}">
+                <span class="nav-ico">⚙</span> Administração
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-chip">
+                <div class="user-avatar">{{ session.get('nome', '?')[0] | upper }}</div>
+                <div class="user-details">
+                    <strong>{{ session.get('nome', 'Usuário') }}</strong>
+                    <small>{{ 'Administrador' if session.get('role') == 'admin' else 'Funcionário' }}</small>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="btn-logout">Sair</a>
+        </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+        </header>
+
+        <section class="page-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</div>
+
+{% else %}
+    {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script>
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (menuBtn && sidebar) {
+        const close = () => {
+            sidebar.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('show');
+        };
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            if (backdrop) backdrop.classList.toggle('show');
+        });
+        if (backdrop) backdrop.addEventListener('click', close);
+    }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

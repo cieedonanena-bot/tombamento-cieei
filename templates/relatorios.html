@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Relatórios — TOMBAMENTO CIEEI DONA NENA{% endblock %}
+{% block page_title %}Relatórios{% endblock %}
+
+{% block content %}
+<div class="card welcome-card">
+    <h2>Central de Relatórios</h2>
+    <p>Escolha o relatório e o formato desejado. Todos os arquivos são gerados com dados atualizados do banco.</p>
+</div>
+
+<div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+
+    <!-- RELATÓRIO 1 — OFICIAL -->
+    <div class="card" style="border-left: 4px solid var(--azul-marinho);">
+        <h3>📋 Relatório Oficial de Tombamento</h3>
+        <p class="cell-hint" style="margin-bottom: 16px;">
+            Documento oficial sem localização, agrupado por material, marca e modelo.
+            Ideal para assinatura da direção.
+        </p>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('relatorios.oficial_pdf') }}" class="btn-small btn-primary">📄 Baixar PDF</a>
+            <a href="{{ url_for('relatorios.oficial_excel') }}" class="btn-small btn-success">📊 Baixar Excel</a>
+        </div>
+    </div>
+
+    <!-- RELATÓRIO 2 — DETALHADO -->
+    <div class="card" style="border-left: 4px solid var(--azul);">
+        <h3>🔍 Relatório Detalhado Interno</h3>
+        <p class="cell-hint" style="margin-bottom: 16px;">
+            Documento interno com todos os detalhes por ambiente, subtotais, danos e responsáveis.
+        </p>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('relatorios.detalhado_pdf') }}" class="btn-small btn-primary">📄 Baixar PDF</a>
+            <a href="{{ url_for('relatorios.detalhado_excel') }}" class="btn-small btn-success">📊 Baixar Excel</a>
+        </div>
+    </div>
+
+    <!-- RELATÓRIO 3 — DANIFICADOS -->
+    <div class="card" style="border-left: 4px solid var(--vermelho);">
+        <h3>⚠️ Materiais Danificados</h3>
+        <p class="cell-hint" style="margin-bottom: 16px;">
+            Somente grupos com danos declarados. Descrição detalhada, responsável e localização.
+        </p>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('relatorios.danos_pdf') }}" class="btn-small btn-primary">📄 Baixar PDF</a>
+            <a href="{{ url_for('relatorios.danos_excel') }}" class="btn-small btn-success">📊 Baixar Excel</a>
+        </div>
+    </div>
+
+</div>
+
+<div class="card">
+    <h3>Sobre os formatos</h3>
+    <ul class="system-list">
+        <li><span class="dot dot-blue"></span> <b>PDF:</b> Formatação institucional com cabeçalho, totais e assinatura.</li>
+        <li><span class="dot dot-blue"></span> <b>Excel:</b> Múltiplas abas, filtros automáticos e colunas ajustadas.</li>
+        <li><span class="dot dot-gray"></span> Os dados são lidos em tempo real do banco Supabase.</li>
+    </ul>
+</div>
+{% endblock %}

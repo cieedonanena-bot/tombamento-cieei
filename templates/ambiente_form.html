@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Novo' if modo == 'novo' else 'Editar' }} Ambiente{% endblock %}
+{% block page_title %}{{ 'Novo Ambiente' if modo == 'novo' else 'Editar Ambiente' }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px;">
+    <form method="POST" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label for="nome">Nome do ambiente *</label>
+        <input type="text" id="nome" name="nome" required
+               value="{{ ambiente.get('nome', '') }}"
+               placeholder="Ex.: Secretaria">
+
+        <label for="bloco_setor">Bloco / Setor</label>
+        <input type="text" id="bloco_setor" name="bloco_setor"
+               value="{{ ambiente.get('bloco_setor', '') or '' }}"
+               placeholder="Ex.: Administrativo">
+
+        <label for="observacao">Observação</label>
+        <textarea id="observacao" name="observacao" rows="3"
+                  placeholder="Opcional">{{ ambiente.get('observacao', '') or '' }}</textarea>
+
+        <div class="form-actions">
+            <a href="{{ url_for('ambientes.index') }}" class="btn-small btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-primary btn-inline">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Contagem — {{ ambiente.nome }}{% endblock %}
+{% block page_title %}Contagem: {{ ambiente.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+    <div>
+        <a href="{{ url_for('ambientes.index') }}" class="btn-small btn-ghost">← Voltar aos Ambientes</a>
+    </div>
+    {% if ambiente.status == 'em_andamento' %}
+    <a href="{{ url_for('contagem.novo', ambiente_id=ambiente.id) }}" class="btn-primary btn-inline">
+        + Adicionar Material
+    </a>
+    {% endif %}
+</div>
+
+<div class="stats-grid" style="margin-bottom: 20px;">
+    <div class="stat-card">
+        <div class="stat-label">Itens Contados</div>
+        <div class="stat-value">{{ total_itens }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Com Selo</div>
+        <div class="stat-value" style="color: var(--verde);">{{ com_selo }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Sem Selo</div>
+        <div class="stat-value" style="color: var(--laranja);">{{ sem_selo }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Itens com Dano</div>
+        <div class="stat-value" style="color: var(--vermelho);">{{ com_dano }}</div>
+    </div>
+</div>
+
+<div class="card">
+    {% if grupos %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Marca / Modelo</th>
+                    <th>Total</th>
+                    <th>Com Selo</th>
+                    <th>Sem Selo</th>
+                    <th>Danos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in grupos %}
+                <tr>
+                    <td><strong>{{ g.materiais.nome }}</strong></td>
+                    <td>{{ g.marca }} / {{ g.modelo }}</td>
+                    <td><strong>{{ g.quantidade_total }}</strong></td>
+                    <td><span class="badge badge-green">{{ g.quantidade_com_selo }}</span></td>
+                    <td><span class="badge badge-orange">{{ g.quantidade_sem_selo }}</span></td>
+                    <td>
+                        {% if g.tem_dano %}
+                            <span class="badge badge-gray" style="background: var(--vermelho-bg); color: var(--vermelho);">Sim</span>
+                        {% else %}
+                            <span class="cell-muted">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">Nenhum material contado neste ambiente ainda.</p>
+    {% endif %}
+</div>
+
+{% if ambiente.status == 'em_andamento' %}
+<div class="card" style="text-align: center; margin-top: 30px;">
+    <h3>Finalizar Conferência</h3>
+    <p style="margin-bottom: 16px;">Ao finalizar, o ambiente ficará bloqueado para edição até que a administração o reabra.</p>
+    <form method="POST" action="{{ url_for('ambientes.finalizar', ambiente_id=ambiente.id) }}" onsubmit="return confirm('Tem certeza que deseja finalizar? Você não poderá mais editar.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn-primary btn-inline" style="background: var(--verde);">Finalizar e Bloquear Ambiente</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Ambientes — TOMBAMENTO CIEEI DONA NENA{% endblock %}
+{% block page_title %}Ambientes{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+    <div class="filter-tabs">
+        <a href="{{ url_for('ambientes.index', status='todos') }}"
+           class="filter-tab {% if filtro == 'todos' %}active{% endif %}">
+            Todos ({{ stats.total }})
+        </a>
+        <a href="{{ url_for('ambientes.index', status='pendente') }}"
+           class="filter-tab {% if filtro == 'pendente' %}active{% endif %}">
+            Pendentes ({{ stats.pendente }})
+        </a>
+        <a href="{{ url_for('ambientes.index', status='em_andamento') }}"
+           class="filter-tab {% if filtro == 'em_andamento' %}active{% endif %}">
+            Em andamento ({{ stats.em_andamento }})
+        </a>
+        <a href="{{ url_for('ambientes.index', status='concluido') }}"
+           class="filter-tab {% if filtro == 'concluido' %}active{% endif %}">
+            Concluídos ({{ stats.concluido }})
+        </a>
+    </div>
+    {% if session.get('role') == 'admin' %}
+    <a href="{{ url_for('ambientes.novo') }}" class="btn-primary btn-inline">
+        + Novo Ambiente
+    </a>
+    {% endif %}
+</div>
+
+<div class="card">
+    {% if ambientes %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Ambiente</th>
+                    <th>Bloco / Setor</th>
+                    <th>Situação</th>
+                    <th>Responsável</th>
+                    <th class="col-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in ambientes %}
+                <tr>
+                    <td>
+                        <strong>{{ a.nome }}</strong>
+                        {% if a.observacao %}
+                        <div class="cell-hint">{{ a.observacao }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ a.bloco_setor or '—' }}</td>
+                    <td>
+                        {% if a.status == 'pendente' %}
+                            <span class="badge badge-gray">Pendente</span>
+                        {% elif a.status == 'em_andamento' %}
+                            <span class="badge badge-orange">Em andamento</span>
+                        {% else %}
+                            <span class="badge badge-green">Concluído</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if a.responsavel %}
+                            <div>{{ a.responsavel.nome_responsavel }}</div>
+                            <div class="cell-hint">
+                                desde {{ a.responsavel.iniciado_em[:16] | replace('T', ' ') }}
+                            </div>
+                        {% else %}
+                            <span class="cell-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="col-actions">
+                        {% set sou_responsavel = a.responsavel and a.responsavel.funcionario_id == session.get('user_id') %}
+
+                        {% if a.status == 'pendente' %}
+                            <form method="POST" action="{{ url_for('ambientes.iniciar', ambiente_id=a.id) }}" class="inline-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <button type="submit" class="btn-small btn-primary">Iniciar</button>
+                            </form>
+                        {% elif a.status == 'em_andamento' %}
+                            {% if sou_responsavel %}
+                                <a href="{{ url_for('contagem.index', ambiente_id=a.id) }}" class="btn-small btn-primary" style="background: var(--azul-marinho); margin-right: 4px;">Contar</a>
+                                
+                                <form method="POST" action="{{ url_for('ambientes.finalizar', ambiente_id=a.id) }}" class="inline-form" onsubmit="return confirm('Finalizar conferência deste ambiente?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="btn-small btn-success">Finalizar</button>
+                                </form>
+
+                                <button type="button" class="btn-small btn-ghost" style="margin-left: 4px;"
+                                        onclick="abrirTransferir('{{ a.id }}', '{{ a.nome }}')">
+                                    Transferir
+                                </button>
+                            {% else %}
+                                <span class="cell-muted">Em uso</span>
+                            {% endif %}
+                        {% elif a.status == 'concluido' and session.get('role') == 'admin' %}
+                            <button type="button" class="btn-small btn-warn"
+                                    onclick="abrirReabrir('{{ a.id }}', '{{ a.nome }}')">
+                                Reabrir
+                            </button>
+                        {% else %}
+                            <span class="cell-muted">—</span>
+                        {% endif %}
+
+                        {% if session.get('role') == 'admin' %}
+                            <a href="{{ url_for('ambientes.editar', ambiente_id=a.id) }}"
+                               class="btn-small btn-ghost" style="margin-left: 4px;">Editar</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="empty-state">Nenhum ambiente encontrado para este filtro.</p>
+    {% endif %}
+</div>
+
+<!-- Modal de Reabertura -->
+<div class="modal-backdrop" id="modalReabrir">
+    <div class="modal">
+        <h3>Reabrir ambiente</h3>
+        <p id="modalReabrirNome" class="cell-hint" style="margin-bottom:12px;"></p>
+        <form method="POST" id="formReabrir">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="justificativa">Justificativa (mínimo 10 caracteres)</label>
+            <textarea id="justificativa" name="justificativa" rows="3" required></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn-small btn-ghost" onclick="fecharReabrir()">Cancelar</button>
+                <button type="submit" class="btn-small btn-warn">Confirmar reabertura</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Transferência -->
+<div class="modal-backdrop" id="modalTransferir">
+    <div class="modal">
+        <h3>Solicitar Transferência</h3>
+        <p id="modalTransferirNome" class="cell-hint" style="margin-bottom:12px;"></p>
+        <form method="POST" id="formTransferir">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label for="destinatario_id">Transferir para *</label>
+            <select id="destinatario_id" name="destinatario_id" required>
+                <option value="">— Selecione um funcionário —</option>
+                {% for f in funcionarios if f.id != session.get('user_id') %}
+                <option value="{{ f.id }}">{{ f.nome_completo }}</option>
+                {% endfor %}
+            </select>
+            <label for="motivo">Motivo (mín. 10 caracteres)</label>
+            <textarea id="motivo" name="motivo" rows="3" required></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn-small btn-ghost" onclick="fecharTransferir()">Cancelar</button>
+                <button type="submit" class="btn-small btn-primary">Solicitar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirReabrir(id, nome) {
+    document.getElementById('formReabrir').action = '/ambientes/' + id + '/reabrir';
+    document.getElementById('modalReabrirNome').textContent = 'Ambiente: ' + nome;
+    document.getElementById('modalReabrir').classList.add('show');
+}
+function fecharReabrir() {
+    document.getElementById('modalReabrir').classList.remove('show');
+    document.getElementById('justificativa').value = '';
+}
+
+function abrirTransferir(id, nome) {
+    document.getElementById('formTransferir').action = '/ambientes/' + id + '/transferir';
+    document.getElementById('modalTransferirNome').textContent = 'Ambiente: ' + nome;
+    document.getElementById('modalTransferir').classList.add('show');
+}
+function fecharTransferir() {
+    document.getElementById('modalTransferir').classList.remove('show');
+    document.getElementById('motivo').value = '';
+}
+</script>
+{% endblock %}

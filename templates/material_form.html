@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Novo' if modo == 'novo' else 'Editar' }} Material{% endblock %}
+{% block page_title %}{{ 'Novo Material' if modo == 'novo' else 'Editar Material' }}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px;">
+    <form method="POST" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+        <label for="nome">Nome do material *</label>
+        <input type="text" id="nome" name="nome" required
+               value="{{ material.get('nome', '') }}"
+               placeholder="Ex.: NOTEBOOK">
+
+        <p class="cell-hint" style="margin-top: 12px;">
+            O nome não pode repetir outro material considerando acentos,
+            maiúsculas ou espaços extras. Use o nome institucional padronizado.
+        </p>
+
+        <div class="form-actions">
+            <a href="{{ url_for('materiais.index') }}" class="btn-small btn-ghost">Cancelar</a>
+            <button type="submit" class="btn-primary btn-inline">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
