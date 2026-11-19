@@ -6,7 +6,9 @@ from flask import (
 )
 from services.auth_guard import login_required, validar_csrf
 from services.ambiente_service import obter_ambiente
-from services.contagem_service import listar_grupos_por_ambiente, salvar_contagem
+from services.contagem_service import (
+    listar_grupos_por_ambiente, salvar_contagem, listar_marcas_modelos
+)
 from services.material_service import listar_materiais
 
 contagem_bp = Blueprint("contagem", __name__, url_prefix="/contagem")
@@ -49,6 +51,7 @@ def novo(ambiente_id):
         return redirect(url_for("ambientes.index"))
 
     materiais = [m for m in listar_materiais() if m["ativo"]]
+    sugestoes = listar_marcas_modelos()
 
     if request.method == "POST":
         if not validar_csrf(request.form.get("csrf_token")):
@@ -94,4 +97,9 @@ def novo(ambiente_id):
         except Exception as e:
             flash(f"Erro ao salvar: {e}", "error")
 
-    return render_template("contagem_form.html", ambiente=ambiente, materiais=materiais)
+    return render_template(
+        "contagem_form.html", 
+        ambiente=ambiente, 
+        materiais=materiais,
+        sugestoes=sugestoes,
+    )

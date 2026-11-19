@@ -84,3 +84,32 @@ def salvar_contagem(
         _cliente().table("grupos_contagem").update({"tem_dano": False}).eq("id", grupo_id).execute()
 
     return {"id": grupo_id}
+
+
+def listar_marcas_modelos() -> dict:
+    """
+    Retorna todas as marcas e modelos distintos já cadastrados.
+    Usado para preencher autocomplete no formulário de contagem.
+    """
+    try:
+        resp = (
+            _cliente()
+            .table("grupos_contagem")
+            .select("marca, modelo")
+            .execute()
+        )
+        dados = resp.data or []
+        
+        # Filtra "Não identificado" para não poluir a lista
+        marcas = sorted({
+            d["marca"] for d in dados 
+            if d.get("marca") and d["marca"] != "Não identificado"
+        })
+        modelos = sorted({
+            d["modelo"] for d in dados 
+            if d.get("modelo") and d["modelo"] != "Não identificado"
+        })
+        
+        return {"marcas": marcas, "modelos": modelos}
+    except Exception:
+        return {"marcas": [], "modelos": []}

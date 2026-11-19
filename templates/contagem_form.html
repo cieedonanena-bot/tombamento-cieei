@@ -18,11 +18,23 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
             <div>
                 <label for="marca">Marca (Opcional)</label>
-                <input type="text" id="marca" name="marca" placeholder="Ex.: Samsung" value="Não identificado">
+                <input type="text" id="marca" name="marca" list="lista-marcas"
+                       placeholder="Ex.: Samsung" value="Não identificado">
+                <datalist id="lista-marcas">
+                    {% for m in sugestoes.marcas %}
+                    <option value="{{ m }}">
+                    {% endfor %}
+                </datalist>
             </div>
             <div>
                 <label for="modelo">Modelo (Opcional)</label>
-                <input type="text" id="modelo" name="modelo" placeholder="Ex.: Galaxy A12" value="Não identificado">
+                <input type="text" id="modelo" name="modelo" list="lista-modelos"
+                       placeholder="Ex.: Galaxy A12" value="Não identificado">
+                <datalist id="lista-modelos">
+                    {% for m in sugestoes.modelos %}
+                    <option value="{{ m }}">
+                    {% endfor %}
+                </datalist>
             </div>
         </div>
 

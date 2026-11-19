@@ -26,7 +26,6 @@ def index():
     if filtro != "todos":
         ambientes = [a for a in ambientes if a["status"] == filtro]
 
-    # Estatísticas rápidas
     todos = listar_ambientes()
     stats = {
         "total": len(todos),
@@ -35,7 +34,6 @@ def index():
         "concluido": sum(1 for a in todos if a["status"] == "concluido"),
     }
 
-    # Lista de funcionários para o modal de transferência
     funcionarios = [f for f in listar_funcionarios() if f["ativo"]]
 
     return render_template(
@@ -129,6 +127,9 @@ def iniciar(ambiente_id):
     except ValueError as e:
         flash(str(e).replace("\n", " — "), "error")
         return redirect(url_for("ambientes.index"))
+    except Exception as e:
+        flash(f"Erro ao iniciar conferência: {e}", "error")
+        return redirect(url_for("ambientes.index"))
 
 
 @ambientes_bp.route("/<ambiente_id>/finalizar", methods=["POST"])
@@ -143,6 +144,8 @@ def finalizar(ambiente_id):
         flash("Ambiente finalizado com sucesso.", "success")
     except ValueError as e:
         flash(str(e), "error")
+    except Exception as e:
+        flash(f"Erro inesperado ao finalizar: {e}", "error")
     return redirect(url_for("ambientes.index"))
 
 
@@ -159,6 +162,8 @@ def reabrir(ambiente_id):
         flash("Ambiente reaberto com sucesso.", "success")
     except ValueError as e:
         flash(str(e), "error")
+    except Exception as e:
+        flash(f"Erro inesperado ao reabrir: {e}", "error")
     return redirect(url_for("ambientes.index"))
 
 
