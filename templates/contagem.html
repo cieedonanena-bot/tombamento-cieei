@@ -45,6 +45,9 @@
                     <th>Com Selo</th>
                     <th>Sem Selo</th>
                     <th>Danos</th>
+                    {% if ambiente.status == 'em_andamento' %}
+                    <th class="col-actions">Ações</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -62,6 +65,12 @@
                             <span class="cell-muted">—</span>
                         {% endif %}
                     </td>
+                    {% if ambiente.status == 'em_andamento' %}
+                    <td class="col-actions">
+                        <a href="{{ url_for('contagem.editar', ambiente_id=ambiente.id, grupo_id=g.id) }}" 
+                           class="btn-small btn-ghost">Editar</a>
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

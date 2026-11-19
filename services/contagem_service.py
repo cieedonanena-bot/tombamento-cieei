@@ -29,10 +29,22 @@ def listar_grupos_por_ambiente(ambiente_id: str) -> list[dict]:
     return resp.data or []
 
 
+def obter_grupo(grupo_id: str) -> dict | None:
+    resp = (
+        _cliente()
+        .table("grupos_contagem")
+        .select("*, materiais(nome), detalhes_danos(*)")
+        .eq("id", grupo_id)
+        .single()
+        .execute()
+    )
+    return resp.data if resp.data else None
+
+
 def salvar_contagem(
     ambiente_id: str, material_id: str, marca: str, modelo: str,
     qtd_total: int, qtd_com_selo: int, qtd_sem_selo: int,
-    usuario_id: str, danos: list[dict] | None = None,
+    usuario_id: str, danos: list[dict] | None = None, grupo_id: str | None = None,
 ) -> dict:
     
     if qtd_total != (qtd_com_selo + qtd_sem_selo):
@@ -44,12 +56,6 @@ def salvar_contagem(
     marca = _normalizar(marca) or "Não identificado"
     modelo = _normalizar(modelo) or "Não identificado"
 
-    existente = (
-        _cliente().table("grupos_contagem").select("id")
-        .eq("ambiente_id", ambiente_id).eq("material_id", material_id)
-        .eq("marca", marca).eq("modelo", modelo).execute()
-    )
-
     dados = {
         "ambiente_id": ambiente_id, "material_id": material_id,
         "marca": marca, "modelo": modelo,
@@ -59,15 +65,27 @@ def salvar_contagem(
         "atualizado_por": usuario_id, "atualizado_em": _agora(),
     }
 
-    if existente.data:
-        grupo_id = existente.data[0]["id"]
+    if grupo_id:
+        # Edição direta de um grupo existente (mesmo que mude marca/modelo)
         _cliente().table("grupos_contagem").update(dados).eq("id", grupo_id).execute()
     else:
-        dados["criado_por"] = usuario_id
-        dados["criado_em"] = _agora()
-        resp = _cliente().table("grupos_contagem").insert(dados).execute()
-        grupo_id = resp.data[0]["id"]
+        # Novo grupo ou atualização por duplicidade
+        existente = (
+            _cliente().table("grupos_contagem").select("id")
+            .eq("ambiente_id", ambiente_id).eq("material_id", material_id)
+            .eq("marca", marca).eq("modelo", modelo).execute()
+        )
+        
+        if existente.data:
+            grupo_id = existente.data[0]["id"]
+            _cliente().table("grupos_contagem").update(dados).eq("id", grupo_id).execute()
+        else:
+            dados["criado_por"] = usuario_id
+            dados["criado_em"] = _agora()
+            resp = _cliente().table("grupos_contagem").insert(dados).execute()
+            grupo_id = resp.data[0]["id"]
 
+    # Atualiza os danos (apaga os antigos e recria)
     _cliente().table("detalhes_danos").delete().eq("grupo_id", grupo_id).execute()
     
     if danos:
@@ -87,10 +105,6 @@ def salvar_contagem(
 
 
 def listar_marcas_modelos() -> dict:
-    """
-    Retorna todas as marcas e modelos distintos já cadastrados.
-    Usado para preencher autocomplete no formulário de contagem.
-    """
     try:
         resp = (
             _cliente()
@@ -100,7 +114,6 @@ def listar_marcas_modelos() -> dict:
         )
         dados = resp.data or []
         
-        # Filtra "Não identificado" para não poluir a lista
         marcas = sorted({
             d["marca"] for d in dados 
             if d.get("marca") and d["marca"] != "Não identificado"

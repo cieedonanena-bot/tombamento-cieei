@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Adicionar Material — {{ ambiente.nome }}{% endblock %}
-{% block page_title %}Adicionar Material{% endblock %}
+{% block title %}{{ 'Editar' if grupo else 'Adicionar' }} Material — {{ ambiente.nome }}{% endblock %}
+{% block page_title %}{{ 'Editar Material' if grupo else 'Adicionar Material' }}{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 720px; margin: 0 auto;">
@@ -11,7 +11,7 @@
         <select id="material_id" name="material_id" required>
             <option value="">— Selecione um material —</option>
             {% for m in materiais %}
-            <option value="{{ m.id }}">{{ m.nome }}</option>
+            <option value="{{ m.id }}" {% if grupo and grupo.material_id == m.id %}selected{% endif %}>{{ m.nome }}</option>
             {% endfor %}
         </select>
 
@@ -19,7 +19,8 @@
             <div>
                 <label for="marca">Marca (Opcional)</label>
                 <input type="text" id="marca" name="marca" list="lista-marcas"
-                       placeholder="Ex.: Samsung" value="Não identificado">
+                       placeholder="Ex.: Samsung" 
+                       value="{{ grupo.marca if grupo else 'Não identificado' }}">
                 <datalist id="lista-marcas">
                     {% for m in sugestoes.marcas %}
                     <option value="{{ m }}">
@@ -29,7 +30,8 @@
             <div>
                 <label for="modelo">Modelo (Opcional)</label>
                 <input type="text" id="modelo" name="modelo" list="lista-modelos"
-                       placeholder="Ex.: Galaxy A12" value="Não identificado">
+                       placeholder="Ex.: Galaxy A12" 
+                       value="{{ grupo.modelo if grupo else 'Não identificado' }}">
                 <datalist id="lista-modelos">
                     {% for m in sugestoes.modelos %}
                     <option value="{{ m }}">
@@ -43,15 +45,18 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
             <div>
                 <label for="quantidade_total">Quantidade Total *</label>
-                <input type="number" id="quantidade_total" name="quantidade_total" required min="1" value="1">
+                <input type="number" id="quantidade_total" name="quantidade_total" required min="1" 
+                       value="{{ grupo.quantidade_total if grupo else 1 }}">
             </div>
             <div>
                 <label for="quantidade_com_selo">Com Selo *</label>
-                <input type="number" id="quantidade_com_selo" name="quantidade_com_selo" required min="0" value="0">
+                <input type="number" id="quantidade_com_selo" name="quantidade_com_selo" required min="0" 
+                       value="{{ grupo.quantidade_com_selo if grupo else 0 }}">
             </div>
             <div>
                 <label for="quantidade_sem_selo">Sem Selo *</label>
-                <input type="number" id="quantidade_sem_selo" name="quantidade_sem_selo" required min="0" value="0">
+                <input type="number" id="quantidade_sem_selo" name="quantidade_sem_selo" required min="0" 
+                       value="{{ grupo.quantidade_sem_selo if grupo else 0 }}">
             </div>
         </div>
         
@@ -103,22 +108,22 @@
     semSeloInput.addEventListener('input', verificarMatematica);
     verificarMatematica();
 
-    function adicionarDano() {
+    function adicionarDano(qtd = '', desc = '', obs = '') {
         const container = document.getElementById('lista-danos');
         const div = document.createElement('div');
         div.style.cssText = "display: grid; grid-template-columns: 80px 1fr 1fr 40px; gap: 10px; margin-bottom: 10px; align-items: start;";
         div.innerHTML = `
             <div>
                 <label style="margin-top:0;">Qtd *</label>
-                <input type="number" name="dano_qtd[]" min="1" placeholder="0">
+                <input type="number" name="dano_qtd[]" min="1" placeholder="0" value="${qtd}">
             </div>
             <div>
                 <label style="margin-top:0;">Descrição *</label>
-                <input type="text" name="dano_desc[]" placeholder="Ex.: Tela quebrada">
+                <input type="text" name="dano_desc[]" placeholder="Ex.: Tela quebrada" value="${desc}">
             </div>
             <div>
                 <label style="margin-top:0;">Obs</label>
-                <input type="text" name="dano_obs[]" placeholder="Opcional">
+                <input type="text" name="dano_obs[]" placeholder="Opcional" value="${obs}">
             </div>
             <div style="margin-top: 24px;">
                 <button type="button" class="btn-small btn-warn" onclick="this.parentElement.parentElement.remove()">X</button>
@@ -126,5 +131,12 @@
         `;
         container.appendChild(div);
     }
+
+    // Carrega os danos existentes se estiver no modo de edição
+    {% if danos %}
+        {% for d in danos %}
+            adicionarDano("{{ d.quantidade_danificada }}", "{{ d.descricao }}", "{{ d.observacao or '' }}");
+        {% endfor %}
+    {% endif %}
 </script>
 {% endblock %}
