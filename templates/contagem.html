@@ -69,6 +69,13 @@
                     <td class="col-actions">
                         <a href="{{ url_for('contagem.editar', ambiente_id=ambiente.id, grupo_id=g.id) }}" 
                            class="btn-small btn-ghost">Editar</a>
+                        <form method="POST" 
+                              action="{{ url_for('contagem.excluir', ambiente_id=ambiente.id, grupo_id=g.id) }}" 
+                              class="inline-form"
+                              onsubmit="return confirm('Excluir o material {{ g.materiais.nome }} ({{ g.marca }} / {{ g.modelo }})?\n\nEsta ação não pode ser desfeita.')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-small btn-warn">Excluir</button>
+                        </form>
                     </td>
                     {% endif %}
                 </tr>

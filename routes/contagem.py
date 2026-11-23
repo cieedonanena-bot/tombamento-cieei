@@ -7,7 +7,8 @@ from flask import (
 from services.auth_guard import login_required, validar_csrf
 from services.ambiente_service import obter_ambiente
 from services.contagem_service import (
-    listar_grupos_por_ambiente, salvar_contagem, listar_marcas_modelos, obter_grupo
+    listar_grupos_por_ambiente, salvar_contagem, listar_marcas_modelos,
+    obter_grupo, excluir_grupo
 )
 from services.material_service import listar_materiais
 
@@ -159,7 +160,7 @@ def editar(ambiente_id, grupo_id):
                 qtd_sem_selo=sem_selo,
                 usuario_id=session["user_id"],
                 danos=danos,
-                grupo_id=grupo_id  # <-- Passa o ID para atualizar o registro correto
+                grupo_id=grupo_id
             )
             flash("Contagem atualizada com sucesso.", "success")
             return redirect(url_for("contagem.index", ambiente_id=ambiente_id))
@@ -177,3 +178,29 @@ def editar(ambiente_id, grupo_id):
         grupo=grupo,
         danos=danos_existentes
     )
+
+
+@contagem_bp.route("/<ambiente_id>/excluir/<grupo_id>", methods=["POST"])
+@login_required
+def excluir(ambiente_id, grupo_id):
+    if not validar_csrf(request.form.get("csrf_token")):
+        flash("Sessão expirada.", "error")
+        return redirect(url_for("contagem.index", ambiente_id=ambiente_id))
+
+    ambiente = obter_ambiente(ambiente_id)
+    if not ambiente or ambiente["status"] != "em_andamento":
+        flash("Este ambiente não está em andamento.", "error")
+        return redirect(url_for("ambientes.index"))
+
+    grupo = obter_grupo(grupo_id)
+    if not grupo or grupo["ambiente_id"] != ambiente_id:
+        flash("Registro não encontrado neste ambiente.", "error")
+        return redirect(url_for("contagem.index", ambiente_id=ambiente_id))
+
+    try:
+        excluir_grupo(grupo_id)
+        flash("Material excluído com sucesso.", "success")
+    except Exception as e:
+        flash(f"Erro ao excluir: {e}", "error")
+
+    return redirect(url_for("contagem.index", ambiente_id=ambiente_id))

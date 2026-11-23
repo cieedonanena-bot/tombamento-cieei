@@ -66,10 +66,8 @@ def salvar_contagem(
     }
 
     if grupo_id:
-        # Edição direta de um grupo existente (mesmo que mude marca/modelo)
         _cliente().table("grupos_contagem").update(dados).eq("id", grupo_id).execute()
     else:
-        # Novo grupo ou atualização por duplicidade
         existente = (
             _cliente().table("grupos_contagem").select("id")
             .eq("ambiente_id", ambiente_id).eq("material_id", material_id)
@@ -85,7 +83,6 @@ def salvar_contagem(
             resp = _cliente().table("grupos_contagem").insert(dados).execute()
             grupo_id = resp.data[0]["id"]
 
-    # Atualiza os danos (apaga os antigos e recria)
     _cliente().table("detalhes_danos").delete().eq("grupo_id", grupo_id).execute()
     
     if danos:
@@ -126,3 +123,11 @@ def listar_marcas_modelos() -> dict:
         return {"marcas": marcas, "modelos": modelos}
     except Exception:
         return {"marcas": [], "modelos": []}
+
+
+def excluir_grupo(grupo_id: str) -> None:
+    """
+    Exclui um grupo de contagem.
+    Os danos associados são removidos automaticamente em cascata pelo banco.
+    """
+    _cliente().table("grupos_contagem").delete().eq("id", grupo_id).execute()
